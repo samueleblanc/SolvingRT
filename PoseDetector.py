@@ -11,10 +11,10 @@ import MathTools
 
 class _PoseDetector:
 
-    def __init__(self, side_seen, draw, static_image_mode=False, model_complexity=1, enable_segmentation=True,
-                 smooth_segmentation=True, min_detection_confidence=0.7, min_tracking_confidence=0.5):
+    def __init__(self, side_seen, exercise, static_image_mode=False, model_complexity=1,
+                 enable_segmentation=True, smooth_segmentation=True, min_detection_confidence=0.8, min_tracking_confidence=0.8):
         self.side_seen = side_seen
-        self.draw = draw
+        self.exercise = exercise
         self.static_image_mode = static_image_mode
         self.model_complexity = model_complexity
         self.enable_segmentation = enable_segmentation
@@ -74,8 +74,34 @@ class _PoseDetector:
     # MediaPipe landmarks
     # https://google.github.io/mediapipe/solutions/pose.html
     def weight_position(self):
-        """
-            To do: Add landmarks for exercise which the third point is not where the weight is (eg squats)
-        """
-        pass
+        if "squat" in self.exercise.lower():
+            return {"right": 12, "left": 11}
+        elif "deadlift" in self.exercise.lower():
+            return {"right": 16, "left": 15}
+        elif ("hip" in self.exercise.lower()) or ("bridge" in self.exercise.lower()):
+            return {"right": 24, "left": 23}
+        elif (self.exercise.muscle.lower() == "chest") or (self.exercise.muscle.lower() == "back") or (self.exercise.muscle.lower() == "deltoids"):
+            return {"right": 16, "left": 15}
+        else:
+            return None
+
+    # Fine length (in percentage of the full limb length in pixels) perpendicular to gravity
+    def find_length(self, pts):
+        if self.side_seen == "left" or "right":
+            weight_pos = _PoseDetector.weight_position(self)
+            if weight_pos is None:
+                weight_pos_x, weight_pos_y = self.positions[pts[2]][1:]
+            else:
+                # Use the center of mass between the weight used and the center of mass of the lifter for exercises like squats and deadlifts
+                weight_position_x, weight_pos_y = self.positions[weight_pos[self.side_seen]][1:]
+                human_cm_x = self.positions[23][1:] if self.side_seen == "left" else self.positions[24][1:]
+                weight_pos_x = MathTools._center_of_mass(human_cm_x, self.exercise.athlete.body_weight, weight_position_x, self.exercise.athlete.weight_used)
+
+            total_length = MathTools._pythagorean_theorem(weight_pos_x, self.positions[pts[1]][1], weight_pos_y, self.positions[pts[1]][2])
+            effective_length = (abs(weight_pos_x - self.positions[pts[1]][1])) / total_length
+        else:
+            raise Exception("Only side 'left' and 'right' are currently accepted")
+
+        return effective_length
+
 
