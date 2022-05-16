@@ -14,8 +14,9 @@ from time import perf_counter
 
 class Athlete:
 
-    def __init__(self, height_meter, moving_limb_meter, weight_used_kg, side_seen):
+    def __init__(self, height_meter, body_weight_kg, moving_limb_meter, weight_used_kg, side_seen):
         self.height = height_meter
+        self.body_weight = body_weight_kg
         self.moving_limb = moving_limb_meter
         self.weight_used = weight_used_kg
         self.side_seen = side_seen
@@ -37,17 +38,17 @@ class Athlete:
 
 class Exercise:
 
-    def __init__(self, name, muscle, video, athlete, measures, draw=True, show_joint_angle=True, show_angle_with_gravity=False):
+    def __init__(self, name, muscle, video, athlete, measures):
         self.name = name
         self.muscle = muscle
         self.video = video
         self.athlete = athlete
         self.measures = measures
-        self.draw = draw
-        self.show_joint_angle = show_joint_angle
-        self.show_angle_with_gravity = show_angle_with_gravity
+        self.draw = True
+        self.show_joint_angle = False
+        self.show_angle_with_gravity = False
         self.width, self.height = 0, 0
-        self.pose = pd._PoseDetector(self.athlete.side_seen, self.draw)
+        self.pose = pd._PoseDetector(self.athlete.side_seen, self.name)
 
     def play_video(self):
         VID = cv2.VideoCapture(self.video)
@@ -56,19 +57,25 @@ class Exercise:
         frame_counts = 0
         times = []
         angles = []
+        concentric_time = 0
+        eccentric_time = 0
+        # stretched_time = 0
+        # shortened_time = 0
+        tust = 0  # time under significant tension
+        concentric_speed = []  # To measure velocity lost
         conc_velocity = []
         ecc_velocity = []
         conc_power = []
         ecc_power = []
         torque = []
-        tust = 0  # time under significant tension
         add_data = False
         time_under_tension = False
+        min_max_angles = False
+        velocity_lost = False
 
         # For resistance profile
         res_pro_angles = []
-        res_pro_conc_power = []
-        res_pro_ecc_power = []
+        res_pro_torque = []
 
         rep_data = []  # Data that is calculated for each rep (eg power and velocity)
         set_data = []  # Data that is calculated for the full set (eg time under tension)
@@ -80,8 +87,9 @@ class Exercise:
         # Count reps
         rep_count = 0
         last_rep = 0
-        conc_motion = True
-        start_angle, end_angle = Exercise._get_muscle_info_(self, "start"), Exercise._get_muscle_info_(self, "end")
+        conc_motion = Exercise._get_muscle_info_(self, "conc_motion")
+        is_shortening = Exercise._get_muscle_info_(self, "conc_motion")
+        angle_decreasing = Exercise._get_muscle_info_(self, "decreasing")
 
         while VID.isOpened():
             success, frame = VID.read()
@@ -95,19 +103,41 @@ class Exercise:
                 frame_counts += 1
 
                 angle = ANALYSIS.angle()
-                angle_gravity = ANALYSIS.angle_gravity()
+                effective_length = self.pose.find_length(POINTS)
+
                 times += [perf_counter()]
                 angles += [angle]
 
                 # Count reps
-                if angle >= start_angle:
-                    if conc_motion:
-                        rep_count += 0.5
-                        conc_motion = False
-                elif angle <= end_angle:
-                    if conc_motion is False:
-                        rep_count += 0.5
-                        conc_motion = True
+                if frame_counts % 4 == 0:
+                    if is_shortening:
+                        if angle_decreasing:
+                            if (angle > last_angle) and (last_angle <= 100):
+                                rep_count += 0.5
+                                is_shortening = False
+                            else:
+                                concentric_time += 4
+                        else:
+                            if (angle < last_angle) and (last_angle >= 80):
+                                rep_count += 0.5
+                                is_shortening = False
+                            else:
+                                concentric_time += 4
+                    else:
+                        if angle_decreasing:
+                            if angle < last_angle and (last_angle >= 80):
+                                rep_count += 0.5
+                                is_shortening = True
+                            else:
+                                eccentric_time += 4
+                        else:
+                            if angle > last_angle and (last_angle <= 100):
+                                rep_count += 0.5
+                                is_shortening = True
+                            else:
+                                eccentric_time += 4
+                elif frame_counts % 2 == 0:
+                    last_angle = angle
 
                 if (rep_count % 1 == 0) and (rep_count > last_rep):
                     rep_data += [[f"Rep #{int(rep_count)}"]]
@@ -117,7 +147,7 @@ class Exercise:
                 for measure in self.measures:
                     if measure == "torque":
                         if frame_counts % 4 == 0:
-                            torque += [ANALYSIS.torque(angle_gravity)]
+                            torque += [ANALYSIS.torque(effective_length)]
                         if add_data:
                             rep_data[len(rep_data) - 1] += [f"Torque: {mt._average(torque)} Nm"]
                             torque *= 0
@@ -125,11 +155,8 @@ class Exercise:
                     elif measure == "power":
                         if frame_counts % 4 == 0:
                             velocity = ANALYSIS.speed(angles, times)
-                            """
-                                To do: Adjust velocity if eccentric
-                            """
-                            power = ANALYSIS.power(velocity, angle_gravity)
-                            if Exercise._get_muscle_info_(self, "type") == "l":
+                            power = ANALYSIS.power(velocity, effective_length)
+                            if conc_motion:
                                 if power < 0:
                                     conc_power += [power]
                                 else:
@@ -149,7 +176,7 @@ class Exercise:
                     elif measure == "speed":
                         if frame_counts % 4 == 0:
                             velocity = ANALYSIS.speed(angles, times)
-                            if Exercise._get_muscle_info_(self, "type") == "l":
+                            if conc_motion:
                                 if velocity < 0:
                                     conc_velocity += [velocity]
                                 else:
@@ -159,48 +186,53 @@ class Exercise:
                                     conc_velocity += [velocity]
                                 else:
                                     ecc_velocity += [velocity]
-                        # Separates data per rep
+
                         if add_data:
-                            rep_data[len(rep_data) - 1] += [f"Conc. velocity: {mt._average(conc_velocity)} rad/s",
-                                                            f"Ecc. velocity: {mt._average(ecc_velocity)} rad/s"]
+                            avg_conc_vel = mt._average(conc_velocity)
+                            avg_ecc_vel = mt._average(ecc_velocity)
+                            rep_data[len(rep_data) - 1] += [f"Conc. velocity: {avg_conc_vel} rad/s",
+                                                            f"Ecc. velocity: {avg_ecc_vel} rad/s"]
+                            concentric_speed += [avg_conc_vel]
                             conc_velocity *= 0
                             ecc_velocity *= 0
 
                     elif measure == "time under tension":
                         time_under_tension = True
-                        tust += ANALYSIS.time_under_tension(angle_gravity)
+                        tust += ANALYSIS.time_under_tension(effective_length)
+
+                    elif measure == "angles":
+                        min_max_angles = True
+
+                    elif measure == "velocity lost":
+                        velocity_lost = True
+
                     elif measure == "tempo":
-                        ANALYSIS.tempo()
-                    elif measure == "EMG":
-                        pass
-                    elif measure == "motor units":
-                        pass
+                        if add_data:
+                            conc_time = concentric_time * (perf_counter() / frame_counts)
+                            ecc_time = eccentric_time * (perf_counter() / frame_counts)
+                            rep_data[len(rep_data) - 1] += [f"Concentric time: {round(conc_time, 4)}",
+                                                            f"Eccentric time: {round(ecc_time, 4)}"]
+                            concentric_time *= 0
+                            eccentric_time *= 0
+
                     elif measure == "resistance profile":
-                        """
-                            To do: Adjust velocity when eccentric
-                        """
                         if frame_counts % 4 == 0:
                             res_pro_angles += [angle]
-                            velocity = ANALYSIS.speed(angles, times)
-                            res_pro_power = ANALYSIS.power(velocity, angle_gravity)
-                            if Exercise._get_muscle_info_(self, "type") == "l":
-                                if res_pro_power < 0:
-                                    res_pro_conc_power += [res_pro_power]
-                                else:
-                                    res_pro_ecc_power += [res_pro_power]
-                            else:
-                                if res_pro_power > 0:
-                                    res_pro_conc_power += [res_pro_power]
-                                else:
-                                    res_pro_ecc_power += [res_pro_power]
+                            res_pro_torque += [ANALYSIS.torque(effective_length)]
                         if add_data:
-                            ANALYSIS.resistance_profile(rep_count, res_pro_conc_power, res_pro_ecc_power, res_pro_angles)
-                            res_pro_conc_power *= 0
-                            res_pro_ecc_power *= 0
+                            ANALYSIS.resistance_profile(rep_count, res_pro_torque, res_pro_angles)
                             res_pro_angles *= 0
+                            res_pro_torque *= 0
 
                     elif measure == "stimulus":
-                        ANALYSIS.stimulus()
+                        pass
+
+                    elif measure == "EMG":
+                        pass
+
+                    elif measure == "motor units":
+                        pass
+
                     else:
                         print(f"'{measure}' is not a valid input")
                         raise ValueError(measure)
@@ -219,11 +251,15 @@ class Exercise:
                 if self.show_joint_angle:
                     cv2.putText(video, f"{round(angle)}", (x2 - 70, y2 + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 0, 0), 2)
                 if self.show_angle_with_gravity:
-                    cv2.putText(video, f"{round(angle_gravity)}", (x3 - 90, y3 + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 0, 0), 2)
-                    cv2.line(video, (x3, (y3 + 8)), (x3, (y3+70)), (255, 255, 255), 3)
-                    cv2.putText(video, "V", ((x3-5), (y3+72)), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 3)
+                    if ("deadlift" not in self.name.lower()) and ("squat" not in self.name.lower()):
+                        angle_gravity = ANALYSIS.angle_gravity()
+                        cv2.putText(video, f"{round(angle_gravity)}", (x3 - 90, y3 + 50), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (255, 0, 0), 2)
+                        cv2.line(video, (x3, (y3 + 8)), (x3, (y3+70)), (255, 255, 255), 3)
+                        cv2.putText(video, "V", ((x3-5), (y3+72)), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 3)
+                    else:
+                        raise Exception(f"Can't show the angle with gravity with a {self.name.lower()}")
 
-            cv2.imshow(str(self.name), video)
+            cv2.imshow(f"{str(self.name)} - Calculating {self.measures}", video)
             if cv2.waitKey(1) == 27:  # 27 is escape
                 break
         VID.release()
@@ -231,6 +267,13 @@ class Exercise:
         if time_under_tension:
             tust_in_sec = tust * (perf_counter() / frame_counts)
             set_data += [f"Time under significant tension: {tust_in_sec} s"]
+        if min_max_angles:
+            set_data += [f"Min angle: {round(min(angles), 4)}", f"Max angle: {round(max(angles), 4)}"]
+        if velocity_lost:
+            max_vel = max(concentric_speed)
+            min_vel = min(concentric_speed)
+            vel_lost = round((min_vel / max_vel) * 100, 2)
+            set_data += [f"Velocity lost: {vel_lost}%"]
         print(rep_data)
         print(set_data)
         return
@@ -246,8 +289,8 @@ class Exercise:
     def no_lines(self):
         self.draw = False
 
-    def no_joint_angle(self):
-        self.show_joint_angle = False
+    def joint_angle(self):
+        self.show_joint_angle = True
 
     def angle_with_gravity(self):
         self.show_angle_with_gravity = True
@@ -259,22 +302,26 @@ class Exercise:
         LANDMARKS = {"chest": {"right": [], "left": []},
                      "biceps": {"right": [12, 14, 16], "left": [11, 13, 15]},
                      "triceps": {"right": [12, 14, 16], "left": [11, 13, 15]},
-                     "deltoids": {"right": [14, 12, 24], "left": [13, 11, 23]},
+                     "deltoids": {"right": [14, 12, 24], "left": [13, 11, 23]},  # Different if shoulder press
                      "back": {"right": [], "left": []},
                      "quadriceps": {"right": [24, 26, 28], "left": [23, 25, 27]},
-                     "hamstrings": {"right": [24, 26, 28], "left": [23, 25, 27]}}
+                     "hamstrings": {"right": [24, 26, 28], "left": [23, 25, 27]},
+                     "glutes": {"right": [12, 24, 26], "left": [11, 23, 25]}}
         return LANDMARKS[self.muscle][self.athlete.side_seen]
 
     def _get_muscle_info_(self, info_needed):
-        # type "l" => muscle starts in a lengthened position, "s" => shortened
-        # start and end are approximate values (deg) for the extrema of a range of motion (used to count reps)
-        INFO = {"chest": {"type": "s", "start": 0, "end": 0},
-                "biceps": {"type": "l", "start": 140, "end": 60},
-                "triceps": {"type": "s", "start": 140, "end": 60},
-                "deltoids": {"type": "l", "start": 30, "end": 80},
-                "back": {"type": "l", "start": 0, "end": 0},
-                "quadriceps": {"type": "s", "start": 160, "end": 90},  # Flip everything if leg extension
-                "hamstrings": {"type": "l", "start": 160, "end": 90}}
+        # conc_motion is True means the first part of the movement is in the concentric portion (muscle shortening)
+        # False means that the muscle starts shortened
+        # decreasing is True means that the joint angle is decreasing during the concentric portion of the movement
+        # False means the angle increases
+        INFO = {"chest": {"conc_motion": True, "decreasing": False} if "stretch" in self.muscle.lower() else {"conc_motion": False, "decreasing": False},
+                "biceps": {"conc_motion": True, "decreasing": True},
+                "triceps": {"conc_motion": False, "decreasing": True},
+                "deltoids": {"conc_motion": False, "decreasing": False} if "high" in self.muscle.lower() else {"conc_motion": True, "decreasing": False},
+                "back": {"conc_motion": True, "decreasing": True},
+                "quadriceps": {"conc_motion": True, "decreasing": False} if "extension" in self.muscle.lower() else {"conc_motion": False, "decreasing": False},
+                "hamstrings": {"conc_motion": True, "decreasing": True},
+                "glutes": {"conc_motion": False, "decreasing": True}}
         return INFO[self.muscle][info_needed]
 
 
