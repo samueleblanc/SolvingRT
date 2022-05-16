@@ -20,19 +20,19 @@ class _VideoAnalysis:
     def angle_gravity(self):
         return self.exercise.pose.find_angle_gravity(self.exercise._get_pose_landmarks_())
 
-    def torque(self, angle):
-        return self.athlete.moving_limb * self.athlete.weight_used * math.sin(angle * _VideoAnalysis.DEG_TO_RAD) * _VideoAnalysis.G
+    def torque(self, eff_length):
+        return self.athlete.moving_limb * self.athlete.weight_used * eff_length * _VideoAnalysis.G
 
-    def power(self, velocity, angle):
-        return self.athlete.moving_limb * self.athlete.weight_used * velocity * math.sin(angle * _VideoAnalysis.DEG_TO_RAD) * _VideoAnalysis.G
+    def power(self, velocity, eff_length):
+        return self.athlete.moving_limb * self.athlete.weight_used * velocity * eff_length * _VideoAnalysis.G
 
     @staticmethod
     def speed(angles, times):
-        return (mt._deg_to_rad(angles[len(angles)-1] - angles[len(angles)-5])) / (times[len(times)-1] - times[len(times)-5])
+        return (mt._deg_to_rad(angles[len(angles)-1] - angles[len(angles)-4])) / (times[len(times)-1] - times[len(times)-4])
 
     @staticmethod
-    def time_under_tension(angle):
-        if math.sin(angle * _VideoAnalysis.DEG_TO_RAD) < 0.05:
+    def time_under_tension(eff_length):
+        if eff_length < 0.05:  # Less than 5% of the length of the muscle is perpendicular to gravitational force
             return 0
         else:
             return 1
@@ -42,31 +42,35 @@ class _VideoAnalysis:
     def tempo(self):
         pass
 
-    # The power for every angle in the movement
-    def resistance_profile(self, rep, concentric_power, eccentric_power, angles):
-        plt.plot(angles[:len(concentric_power)], concentric_power, "b", label="Concentric")
-        plt.plot(angles[len(concentric_power):], eccentric_power, "g", label="Eccentric")
-        plt.legend(loc="upper left")
+    # The torque for every angle in the movement
+    def resistance_profile(self, rep, torque, angles):
+        """
+            To do: Video needs to stay the same size
+        """
+        plt.plot(angles, torque, "b")
         plt.xlabel("Angle (°)")
-        plt.ylabel("Power (W)")
-        plt.title(f"Resistance profile of a {self.exercise.name} (rep #{str(rep)})")
-        plt.savefig("resistance_profile_rep_" + str(rep) + ".png")
+        plt.ylabel("Torque (Nm)")
+        plt.title(f"Resistance profile of a {self.exercise.name.lower()} (rep #{str(int(rep))})")
+        plt.savefig("resistance_profile_rep_" + str(int(rep)) + ".png")
+        plt.cla()
+        plt.clf()
+        plt.close()
 
     # Estimated EMG
     def EMG(self):
-        # Link to paper used
         pass
 
     # Estimated percentage of motor units recruited
     def motor_units(self):
-        # Link to paper used
         pass
 
-    # Estimated number of reps in reserved based on velocity changes (and facial features?!)
-    def reps_in_reserves(self):
+    def velocity_lost(self):
         pass
 
     # Output is a number between 0 and 1, with 0 being strength dominant and 1 being glycolytic dominant
     def stimulus(self):
-        # beta version
+        pass
+
+    # Estimated number of reps in reserve
+    def RIR(self):
         pass
