@@ -49,6 +49,10 @@ def _law_of_cosine(x1, x2, x3, y1, y2, y3):
     return angle_cos
 
 
+def _pythagorean_theorem(x1, x2, y1, y2, z1=0, z2=0):
+    return (((x2-x1)**2) + ((y2-y1)**2) + (z2-z1)**2) ** (1/2)
+
+
 def _pendulum_velocity(min_angle, max_angle, length):
     simple_pendulum = ((2 * PI) * (length / G) ** (1/2))
     # Taylor series to approximate
@@ -61,7 +65,7 @@ def _pendulum_velocity(min_angle, max_angle, length):
 def _standard_deviation(average, sample):
     n = 0.0
     n += [((i - average) ** 2) for i in sample]
-    std = (n / len(average)) ** (1/2)
+    std = (n / len(sample)) ** (1/2)
     return std
 
 
@@ -69,4 +73,7 @@ def _average(data):
     sum = 0
     for i in data:
         sum += i
+    if len(data) == 0:
+        raise Exception("Division by zero. Often caused by video not restricted to the lift "
+                        "(eg. the lifter preparing is included).")
     return round((abs(sum) / len(data)), 4)
