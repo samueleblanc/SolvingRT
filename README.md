@@ -45,6 +45,13 @@ Please take into consideration the angle in which the video is filmed, based on 
 For instance, if the goal is to measure power (torque times angular velocity i.e. 𝑃 = 𝜏𝜔) in a biceps curl,
 selecting a video with a side view is the only right way to do it.
 
+The video must be filmed without an angle, but it doesn't matter if it is in portrait or landscape (see below).
+
+![spider curl gif](Images/spider_curl.gif)
+
+The reason is that the force of gravity is treated as being parallel to the height of the video, 
+not perpendicular to the gym floor.
+
 As of right now, only exercises that uses dumbbell (DB) or barbell (BB) works for every measure.
 
 Only muscle groups as a whole can be selected. For example, you can only select "back" and not "rhomboids".
@@ -54,9 +61,10 @@ Thank you for considering to help out! Pull requests and issues are welcomed!
 Please add comments to your code.
 ## In the future
 Short/medium term goals are to 
+* Make it faster and more performant
 * Make it more specific for various muscle groups
     * e.g. "upper chest" vs "lower chest"
 * Make it compatible with cable exercises
-* Tell if the set tended more toward "strength", "endurance", etc.
+* Add more measures
 ## License
 MIT
