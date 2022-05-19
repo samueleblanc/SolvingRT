@@ -38,13 +38,14 @@ setup(name="SolvingRT",
       long_description=readme("README.md"),
       author="Samuel Leblanc",
       author_email="samuel.solving.rt@gmail.com",
+      url="https://github.com/samueleblanc/SolvingRT",
       license="MIT",
-      keywords="resistance training video exercise",
+      keywords=["resistance", "training", "video", "exercise"],
       packages=["solvingrt"],
       classifiers=[
           "Programming Language :: Python :: 3",
           "License :: OSI Approved :: MIT License"
       ],
-      install_requires=["numpy", "opencv", "mediapipe", "matplotlib"],
+      install_requires=["numpy", "opencv-python", "mediapipe", "matplotlib"],
       python_requires=">=3.8"
       )
