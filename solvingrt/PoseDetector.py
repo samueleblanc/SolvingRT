@@ -25,14 +25,14 @@ SOFTWARE.
 import mediapipe as mp
 import cv2
 import math
-import MathTools
+from solvingrt import MathTools
 
 
 class _PoseDetector:
 
     def __init__(self, exercise, static_image_mode=False, model_complexity=1,
                  enable_segmentation=True, smooth_segmentation=True,
-                 min_detection_confidence=0.8, min_tracking_confidence=0.8):
+                 min_detection_confidence=0.4, min_tracking_confidence=0.4):
         self.exercise = exercise
         self.side_seen = self.exercise.athlete.side_seen
         self.exercise_name = self.exercise.name
@@ -79,10 +79,17 @@ class _PoseDetector:
             x2, y2 = self.positions[pts[1]]
             x3, y3 = self.positions[pts[2]]
         elif (self.side_seen.lower() == "front") or (self.side_seen.lower() == "back"):
-            # TODO: Make sure front and back measures works for every muscle
-            x1, y1 = self.positions[pts[1]]
-            x2, y2 = self.positions[pts[0]]
-            x3, y3 = x2, y1
+            if _PoseDetector.is_upper_body(self):
+                if self.exercise.right_side is True:
+                    x1, y1 = self.positions[14]
+                    x2, y2 = self.positions[12]
+                    x3, y3 = x2, (y2 + 100)
+                else:
+                    x1, y1 = self.positions[13]
+                    x2, y2 = self.positions[11]
+                    x3, y3 = x2, (y2 + 100)
+            else:
+                raise Exception("Sides 'front' and 'back' are only supported for upper body muscles.")
         else:
             print(f"{self.side_seen} is not a valid input. Options are 'right', 'left', 'front' and 'back'.")
             raise ValueError(self.side_seen)
@@ -102,13 +109,15 @@ class _PoseDetector:
             x2, y2 = self.positions[pts[2]]
             x1, y1 = x2, (y2 + 60)
             x3, y3 = self.positions[pts[1]]
-        elif (self.side_seen.lower() == "front") or (self.side_seen.lower() == "back"):
-            x2, y2 = self.positions[pts[0]]
-            x1, y1 = x2, (y2 + 100)
-            x3, y3 = self.positions[pts[2]]
         else:
-            print(f"{self.side_seen} is not a valid input. Options are 'right', 'left', 'front' and 'back'.")
-            raise ValueError(self.side_seen)
+            if self.exercise.right_side is True:
+                x1, y1 = self.positions[14]
+                x2, y2 = self.positions[12]
+                x3, y3 = x2, (y2 + 100)
+            else:
+                x1, y1 = self.positions[13]
+                x2, y2 = self.positions[11]
+                x3, y3 = x2, (y2 + 100)
 
         cos_angle = MathTools._law_of_cosine(x1, x2, x3, y1, y2, y3)
         angle = MathTools._rad_to_deg(math.acos(cos_angle))
@@ -131,13 +140,27 @@ class _PoseDetector:
         else:
             return None
 
+    def is_upper_body(self):
+        """
+        :return: (boolean) True if the muscle is part of the upper body musculature, False if not
+        """
+        UPPER = {"chest": True,
+                 "back": True,
+                 "deltoids": True,
+                 "biceps": True,
+                 "triceps": True,
+                 "quadriceps": False,
+                 "hamstrings": False,
+                 "glutes": False}
+        return UPPER[self.muscle.lower()]
+
     def find_length(self, pts):
         """
         :arg pts: The array of the three joints to follow
 
         :return: (float) The length (in percentage of the full limb length in pixels) perpendicular to gravity
         """
-        if self.side_seen == "left" or "right":
+        if (self.side_seen == "left") or (self.side_seen == "right"):
             weight_pos = _PoseDetector.weight_position(self)
             if weight_pos is None:
                 weight_pos_x, weight_pos_y = self.positions[pts[2]]
@@ -152,11 +175,17 @@ class _PoseDetector:
             total_length = MathTools._pythagorean_theorem(weight_pos_x, self.positions[pts[1]][0],
                                                           weight_pos_y, self.positions[pts[1]][1])
             effective_length = (abs(weight_pos_x - self.positions[pts[1]][0])) / total_length
-        elif (self.side_seen.lower() == "front") or (self.side_seen.lower() == "back"):
-            pass
         else:
-            print(f"{self.side_seen} is not a valid input. Options are 'right', 'left', 'front' and 'back'.")
-            raise ValueError(self.side_seen)
+            if self.exercise.right_side is True:
+                x1, y1 = self.positions[12]
+                x2, y2 = self.positions[16]
+                total_length = MathTools._pythagorean_theorem(x1, x2, y1, y2)
+                effective_length = abs(self.positions[16][0] - self.positions[12][0]) / total_length
+            else:
+                x1, y1 = self.positions[11]
+                x2, y2 = self.positions[15]
+                total_length = MathTools._pythagorean_theorem(x1, x2, y1, y2)
+                effective_length = abs(self.positions[15][0] - self.positions[11][0]) / total_length
 
         return effective_length
 
