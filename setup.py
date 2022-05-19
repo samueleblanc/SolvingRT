@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-#!/usr/bin/env python3
+#!/usr/bin/env
 
 import os
 from setuptools import setup
