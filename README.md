@@ -38,11 +38,11 @@ Data calculated for the set: ['Velocity lost: 27.03%']
 * velocity lost
 * parallel
 * tempo (time spent in the eccentric and concentric portion only)
-* resistance profile (graph of y = 𝜏(𝜃), x = 𝜃 where 𝜏(𝜃) is the torque at an angle)
+* resistance profile (graph of the torque for every angle)
 
 ## Known limitations
 Please take into consideration the angle in which the video is filmed, based on your goals.
-For instance, if the goal is to measure power (torque times angular velocity i.e. 𝑃 = 𝜏𝜔) in a biceps curl,
+For instance, if the goal is to measure power (torque times angular velocity) in a biceps curl,
 selecting a video with a side view is the only right way to do it.
 
 The video must be filmed without an angle, but it doesn't matter if it is in portrait or landscape (see below).
