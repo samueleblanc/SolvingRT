@@ -25,8 +25,9 @@ SOFTWARE.
 
 import os
 import cv2
-from solvingrt import PoseDetector as pd, MathTools as mt
-import VideoAnalysis as va
+from solvingrt import PoseDetector as pd
+from solvingrt import VideoAnalysis as va
+from solvingrt import MathTools as mt
 from time import perf_counter
 
 
@@ -64,16 +65,17 @@ class Athlete:
 
 class Exercise:
 
-    def __init__(self, name, muscle, video, athlete, measures):
-        self.name = name
+    def __init__(self, exercise_name, muscle, path_to_video, athlete, measures):
+        self.name = exercise_name
         self.muscle = muscle
-        self.video = video
+        self.video = path_to_video
         self.athlete = athlete
         self.measures = measures
         self.draw = True
         self.show_joint_angle = False
         self.show_angle_with_gravity = False
         self.save_f = False
+        self.right_side = False
         self.width, self.height = 0, 0
         self.pose = pd._PoseDetector(self)
 
@@ -93,7 +95,7 @@ class Exercise:
         angles = []
         concentric_time = 0
         eccentric_time = 0
-        # TODO: Add possibility to measure the amount of time spent while in lengthened or shortened position
+        # TODO: Measure the amount of time spent while in lengthened or shortened position (for tempo)
         # lengthened_time = 0
         # shortened_time = 0
         tust = 0  # time under significant tension
@@ -260,10 +262,10 @@ class Exercise:
 
                     elif measure == "parallel":
                         if (self.muscle.lower() == "quadriceps") or (self.muscle.lower() == "hamstrings"):
-                            if y1 <= y2:
+                            if y1 >= y2:
                                 is_parallel = True
                         elif self.muscle.lower() == "glutes":
-                            if y2 <= y3:
+                            if y2 >= y3:
                                 is_parallel = True
                         if add_data:
                             rep_data[len(rep_data) - 1] += [f"Parallel: {is_parallel}"]
@@ -413,6 +415,13 @@ class Exercise:
         """
         self.save_f = True
 
+    def switch_side(self):
+        """
+        When filming from front or back, the side analyzed is the left one.
+        This method switches it to the left side
+        """
+        self.right_side = True
+
     def _get_pose_landmarks_(self):
         """
         Dict of the landmarks depending on the muscle and the side seen by the camera.
@@ -421,14 +430,32 @@ class Exercise:
 
         :return: An array of the three points to follow
         """
-        LANDMARKS = {"chest": {"right": [12, 14, 16], "left": [11, 13, 15]},
-                     "biceps": {"right": [12, 14, 16], "left": [11, 13, 15]},
-                     "triceps": {"right": [12, 14, 16], "left": [11, 13, 15]},
-                     "deltoids": {"right": [14, 12, 24], "left": [13, 11, 23]},
-                     "back": {"right": [12, 14, 16], "left": [11, 13, 15]},
-                     "quadriceps": {"right": [24, 26, 28], "left": [23, 25, 27]},
-                     "hamstrings": {"right": [24, 26, 28], "left": [23, 25, 27]},
-                     "glutes": {"right": [12, 24, 26], "left": [11, 23, 25]}}
+
+        # Front and back are mostly used to draw the lines, not for measurements
+        LANDMARKS = {"chest": {"right": [12, 14, 16], "left": [11, 13, 15],
+                               "front": [14, 12, 24] if self.right_side else [13, 11, 23],
+                               "back": [14, 12, 24] if self.right_side else [13, 11, 23]},
+                     "biceps": {"right": [12, 14, 16], "left": [11, 13, 15],
+                                "front": [14, 12, 24] if self.right_side else [13, 11, 23],
+                                "back": [14, 12, 24] if self.right_side else [13, 11, 23]},
+                     "triceps": {"right": [12, 14, 16], "left": [11, 13, 15],
+                                 "front": [14, 12, 24] if self.right_side else [13, 11, 23],
+                                 "back": [14, 12, 24] if self.right_side else [13, 11, 23]},
+                     "deltoids": {"right": [14, 12, 24], "left": [13, 11, 23],
+                                  "front": [14, 12, 24] if self.right_side else [13, 11, 23],
+                                  "back": [14, 12, 24] if self.right_side else [13, 11, 23]},
+                     "back": {"right": [14, 12, 24], "left": [13, 11, 23],
+                              "front": [14, 12, 24] if self.right_side else [13, 11, 23],
+                              "back": [14, 12, 24] if self.right_side else [13, 11, 23]},
+                     "quadriceps": {"right": [24, 26, 28], "left": [23, 25, 27],
+                                    "front": [24, 26, 28] if self.right_side else [23, 25, 27],
+                                    "back": [24, 26, 28] if self.right_side else [23, 25, 27]},
+                     "hamstrings": {"right": [24, 26, 28], "left": [23, 25, 27],
+                                    "front": [24, 26, 28] if self.right_side else [23, 25, 27],
+                                    "back": [24, 26, 28] if self.right_side else [23, 25, 27]},
+                     "glutes": {"right": [12, 24, 26], "left": [11, 23, 25],
+                                "front": [12, 24, 26] if self.right_side else [11, 23, 25],
+                                "back": [12, 24, 26] if self.right_side else [11, 23, 25]}}
         return LANDMARKS[self.muscle.lower()][self.athlete.side_seen.lower()]
 
     def _get_muscle_info_(self, info_needed):
