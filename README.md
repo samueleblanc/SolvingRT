@@ -2,7 +2,7 @@
 The primary goal of SolvingRT is to standardize exercise mechanics in a non-intrusive way, 
 by measuring certain aspect of the lift with a video.
 
-<a href="https://samueleblanc.com/SolvingRT/documentation.html" target="_blank">Full documentation</a>
+<a href="https://samueleblanc.com/solvingrt/documentation.html" target="_blank">Full documentation</a>
 ## Requirements
 For SolvingRT to work, you need <a href="https://google.github.io/mediapipe/getting_started/python.html" target="_blank">MediaPipe</a>, 
 <a href="https://opencv.org/releases/" target="_blank">OpenCV</a> and <a href="https://matplotlib.org/stable/users/getting_started/" target="_blank">Matplotlib</a> (if you want to draw the graph of the resistance profile).
