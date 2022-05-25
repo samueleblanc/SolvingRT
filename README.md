@@ -33,6 +33,7 @@ Data calculated for the set: ['Velocity lost: 27.03%']
 * speed (angular velocity)
 * torque
 * power
+* work
 * time under tension
 * angles (min and max angle)
 * velocity lost
