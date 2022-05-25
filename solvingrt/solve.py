@@ -25,6 +25,7 @@ SOFTWARE.
 
 import os
 import cv2
+from numpy import add
 from solvingrt import PoseDetector as pd
 from solvingrt import VideoAnalysis as va
 from solvingrt import MathTools as mt
@@ -93,6 +94,7 @@ class Exercise:
         frame_counts = 0
         times = []
         angles = []
+        rep_angles = []
         concentric_time = 0
         eccentric_time = 0
         # TODO: Measure the amount of time spent while in lengthened or shortened position (for tempo)
@@ -114,24 +116,28 @@ class Exercise:
         velocity_lost = False
         res_pro = False
         parallel = False
+        work = False
         for measure in self.measures:
-            if measure.lower() == "time under tension":
+            measure = measure.lower()
+            if measure == "time under tension":
                 time_under_tension = True
-            elif measure.lower() == "angles":
+            elif measure == "angles":
                 min_max_angles = True
-            elif measure.lower() == "velocity lost":
+            elif measure == "velocity lost":
                 velocity_lost = True
-            elif measure.lower() == "resistance profile":
+            elif measure == "resistance profile":
                 res_pro = True
-            elif (measure.lower() == "parallel") and ("squat" in self.name.lower()):
+            elif (measure == "parallel") and ("squat" in self.name.lower()):
                 parallel = True
-            elif measure.lower() == "speed":
+            elif measure == "work":
+                work = True
+            elif measure == "speed":
                 pass
-            elif measure.lower() == "torque":
+            elif measure == "torque":
                 pass
-            elif measure.lower() == "power":
+            elif measure == "power":
                 pass
-            elif measure.lower() == "tempo":
+            elif measure == "tempo":
                 pass
             else:
                 print(f"{measure} is not a valid input.")
@@ -170,6 +176,7 @@ class Exercise:
 
                 times += [perf_counter()]
                 angles += [angle]
+                rep_angles += [angle]
 
                 # Count reps
                 if frame_counts % 4 == 0:
@@ -209,6 +216,7 @@ class Exercise:
 
                 # Loops on store data depending on if the user wants this measure or not
                 for measure in self.measures:
+                    measure = measure.lower()
                     if measure == "torque":
                         if frame_counts % 4 == 0:
                             torque += [ANALYSIS.torque(effective_length)]
@@ -216,7 +224,7 @@ class Exercise:
                             rep_data[len(rep_data) - 1] += [f"Torque: {mt._average(torque)} Nm"]
                             torque *= 0
 
-                    elif measure == "power":
+                    elif (measure == "power") or (work is True):
                         if frame_counts % 4 == 0:
                             velocity = ANALYSIS.speed(angles, times)
                             power = ANALYSIS.power(velocity, effective_length)
@@ -230,10 +238,15 @@ class Exercise:
                                     conc_power += [power]
                                 else:
                                     ecc_power += [power]
-                        # Separates data per rep
-                        if add_data:
-                            rep_data[len(rep_data) - 1] += [f"Conc. power: {mt._average(conc_power)} W",
-                                                            f"Ecc. power: {mt._average(ecc_power)} W"]
+                        if add_data: 
+                            avg_conc_power = mt._average(conc_power)
+                            avg_ecc_power = mt._average(ecc_power)
+                            if measure == "power":
+                                rep_data[len(rep_data) - 1] += [f"Conc. power: {avg_conc_power} W",
+                                                                f"Ecc. power: {avg_ecc_power} W"]
+                            if work is True:
+                                total_work = avg_conc_power * (max(rep_angles) - min(rep_angles))
+                                rep_data[len(rep_data) - 1] += [f"Work (concentric): {total_work}J"]
                             conc_power *= 0
                             ecc_power *= 0
 
@@ -278,10 +291,15 @@ class Exercise:
                         if add_data:
                             conc_time = concentric_time * (perf_counter() / frame_counts)
                             ecc_time = eccentric_time * (perf_counter() / frame_counts)
-                            rep_data[len(rep_data) - 1] += [f"Concentric time: {round(conc_time, 4)}",
-                                                            f"Eccentric time: {round(ecc_time, 4)}"]
+                            rep_data[len(rep_data) - 1] += [f"Concentric time: {round(conc_time, 4)}s",
+                                                            f"Eccentric time: {round(ecc_time, 4)}s"]
                             concentric_time *= 0
                             eccentric_time *= 0
+                    
+                    elif measure == "angles":
+                        if add_data:
+                            rep_data[len(rep_data) - 1] += [f"Min angle: {min(rep_angles)}",
+                                                            f"Max angle: {max(rep_angles)}"]
 
                     elif measure == "resistance profile":
                         # The first rep is excluded for the graph because it is
@@ -290,7 +308,9 @@ class Exercise:
                             res_pro_angles += [angle]
                             res_pro_torque += [ANALYSIS.torque(effective_length)]
 
-                add_data = False
+                if add_data is True:
+                    rep_angles *= 0  # Used at two places, that's why it's emptied here
+                    add_data = False
 
                 if self.draw:
                     if parallel is True:
