@@ -33,7 +33,7 @@ def readme(file_name):
 
 
 setup(name="SolvingRT",
-      version="0.1.0",
+      version="0.1.3",
       description="Measure certain aspect of exercise mechanics in a non-intrusive way",
       long_description=readme("README.md"),
       author="Samuel Leblanc",
@@ -46,6 +46,9 @@ setup(name="SolvingRT",
           "Programming Language :: Python :: 3",
           "License :: OSI Approved :: MIT License"
       ],
-      install_requires=["numpy", "opencv-python", "mediapipe", "matplotlib"],
+      install_requires=["numpy", "opencv-python", "mediapipe"],
+      extra_requires={
+          "resistance-profile": ["matplotlib"]
+      },
       python_requires=">=3.8"
       )
