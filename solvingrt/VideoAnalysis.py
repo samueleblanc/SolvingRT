@@ -23,7 +23,6 @@ SOFTWARE.
 """
 
 from solvingrt import MathTools as mt
-import matplotlib.pyplot as plt
 import os
 
 
@@ -38,19 +37,19 @@ class _VideoAnalysis:
         self.exercise = exercise  # Class Exercise from SolvingRT file
         self.measures = self.exercise.measures
 
-    def angle(self):
+    def angle(self) -> float:
         """
         :return: The angle (°) of the moving joint
         """
         return self.exercise.pose.find_angle(self.exercise._get_pose_landmarks_())
 
-    def angle_gravity(self):
+    def angle_gravity(self) -> float:
         """
         :return: The angle (°) between the moving limb and a parallel line to gravity
         """
         return self.exercise.pose.find_angle_gravity(self.exercise._get_pose_landmarks_())
 
-    def torque(self, eff_length):
+    def torque(self, eff_length: float) -> float:
         """
         The torque is defined as 𝜏 = 𝐹×𝑟 (torque = force [cross product] radius) = 𝐹𝑟sin𝜃
 
@@ -61,7 +60,7 @@ class _VideoAnalysis:
         """
         return self.athlete.moving_limb * self.athlete.weight_used * eff_length * _VideoAnalysis.G
 
-    def power(self, velocity, eff_length):
+    def power(self, velocity: float, eff_length: float) -> float:
         """
         The power is defined as 𝑃 = 𝜏𝜔 (Power = torque x angular velocity)
 
@@ -74,12 +73,12 @@ class _VideoAnalysis:
         return self.athlete.moving_limb * self.athlete.weight_used * velocity * eff_length * _VideoAnalysis.G
 
     @staticmethod
-    def speed(angles, times):
+    def speed(angles: list, times: list) -> float:
         """
         Measures the angular velocity (rad/s) of the moving joint.
 
-        :arg angles: Array of every angles
-        :arg times: Array of the times that match the angles
+        :arg angles: List of every angles
+        :arg times: List of the times that match the angles
 
         :return: angular velocity (rad/s) of the last angle/time by the 4th to last angle/time.
         It is "instantaneous" enough, and the risk of errors diminishes
@@ -88,7 +87,7 @@ class _VideoAnalysis:
                (times[len(times)-1] - times[len(times)-4])
 
     @staticmethod
-    def time_under_tension(eff_length):
+    def time_under_tension(eff_length: float) -> int:
         """
         The time under (significant) tension is the amount of time spent where the targeted muscle is
         in a "challenging" position. In this case, it is defined as a position where at least 5% of
@@ -114,15 +113,17 @@ class _VideoAnalysis:
         """
         pass
 
-    def resistance_profile(self, torque, angles):
+    def resistance_profile(self, torque: list, angles: list) -> None:
         """
         The resistance profile is defined as the torque for every angle of the exercise
 
-        :arg torque: Array of every torque calculated
-        :arg angles: Array of every matching angles
+        :arg torque: List of every torque calculated
+        :arg angles: List of every matching angles
 
         Saves the graph as a png file
         """
+        import matplotlib.pyplot as plt
+        
         plt.plot(angles, torque, "b")
         plt.xlabel("Angle (°)")
         plt.ylabel("Torque (Nm)")

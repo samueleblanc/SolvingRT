@@ -29,40 +29,40 @@ E = 2.71828
 G = 9.8
 
 
-def _deg_to_rad(angle):
+def _deg_to_rad(angle: float) -> float:
     """
     Convert degrees to radians
 
-    :arg angle: float which is an angle in degree (°)
+    :arg angle: angle in degree (°)
 
-    :return: a float (angle in rad)
+    :return: angle in rad
     """
     return angle * 0.0174533  # pi / 180 = 0.0174533
 
 
-def _rad_to_deg(angle):
+def _rad_to_deg(angle: float) -> float:
     """
     Convert radians to degrees
 
-    :arg angle: float which is an angle in rad
+    :arg angle: an angle in rad
 
-    :return: a float (angle in deg)
+    :return: angle in degree (°)
     """
     return angle * 57.2958  # 180 / pi = 57.2958
 
 
-def _sigmoid(x):
+def _sigmoid(x: float) -> float:
     """
     Sigmoid function, used to map any number of a list as a number between 0 and 1
 
-    :arg x: The number (float) to be mapped onto ]0,1[
+    :arg x: The number to be mapped onto ]0,1[
 
     :return: a float between 0 and 1
     """
     return 1 / (1 + (E ** (-1 * x)))
 
 
-def _effective_length(percent, limb):
+def _effective_length(percent: float, limb: float) -> float:
     """
     The effective length is the length of the limb that is perpendicular to the force applied by the weight used
 
@@ -70,12 +70,12 @@ def _effective_length(percent, limb):
     perpendicular to the force
     :arg limb: the length (in meter) of the moving limb
 
-    :return: (float) The length (in meter) perpendicular to force
+    :return: The length (in meter) perpendicular to force
     """
     return percent * limb
 
 
-def _cos_to_sin(cos):
+def _cos_to_sin(cos: float) -> float:
     """
     Convert a cosine to a sine
 
@@ -86,7 +86,7 @@ def _cos_to_sin(cos):
     return 1 - (cos**2)
 
 
-def _center_of_mass(cm_human, body_weight, position, used_weight):
+def _center_of_mass(cm_human: int, body_weight: float, position: int, used_weight: float) -> int:
     """
     Finds the center of mass between two masses in 1D
 
@@ -95,16 +95,16 @@ def _center_of_mass(cm_human, body_weight, position, used_weight):
     :arg position: The location of the weight used for the exercise
     :arg used_weight: The weight (kg) used for the exercise
 
-    :return: (integer) The center of mass in the corresponding axis
+    :return: The center of mass in the corresponding axis
     """
     return int((cm_human * body_weight) + (position * used_weight) / (body_weight + used_weight))
 
 
-def _law_of_cosine(x1, x2, x3, y1, y2, y3):
+def _law_of_cosine(x1: int, x2: int, x3: int, y1: int, y2: int, y3: int) -> float:
     """
     :args: Three pairs of points in a 2D space
 
-    :return: (float) The cosine of the angle between side_a and side_c
+    :return: The cosine of the angle between side_a and side_c
     """
     side_c = (((x3 - x2) ** 2) + ((y3 - y2) ** 2)) ** (1 / 2)
     side_a = (((x2 - x1) ** 2) + ((y2 - y1) ** 2)) ** (1 / 2)
@@ -118,21 +118,21 @@ def _law_of_cosine(x1, x2, x3, y1, y2, y3):
     return angle_cos
 
 
-def _pythagorean_theorem(x1, x2, y1, y2, z1=0, z2=0):
+def _pythagorean_theorem(x1: int, x2: int, y1: int, y2: int, z1=0, z2=0) -> float:
     """
     :args: Two or three pairs of points (2D or 3D)
 
-    :return: (float) The length of the hypotenuse
+    :return: The length of the hypotenuse
     """
     return (((x2-x1)**2) + ((y2-y1)**2) + (z2-z1)**2) ** (1/2)
 
 
-def _pendulum_period(max_angle, length):
+def _pendulum_period(max_angle: float, length: float) -> float:
     """
     :arg max_angle: The biggest angle (rad)
     :arg length: The length of the pendulum
 
-    :return: (float) The period (s) of a pendulum
+    :return: The period (s) of a pendulum
     """
     simple_pendulum = ((2 * PI) * (length / G) ** (1/2))
     # Taylor series to approximate
@@ -140,12 +140,12 @@ def _pendulum_period(max_angle, length):
     return complex_pendulum
 
 
-def _standard_deviation(average, sample):
+def _standard_deviation(average: float, sample: list) -> float:
     """
-    :arg average: (float) The average of a sample
-    :arg sample: (array) The sample on which to calculate the standard deviation
+    :arg average: The average of a sample
+    :arg sample: The sample on which to calculate the standard deviation
 
-    :return: (float) The standard deviation
+    :return: The standard deviation
     """
     n = 0.0
     n += [((i - average) ** 2) for i in sample]
@@ -153,11 +153,11 @@ def _standard_deviation(average, sample):
     return std
 
 
-def _average(data):
+def _average(data: list) -> float:
     """
-    :arg data: (array) Data on which to calculate an average
+    :arg data: Data on which to calculate an average
 
-    :return: (float) The average of the data provided
+    :return: The average of the data provided
     """
     summ = 0
     for i in data:

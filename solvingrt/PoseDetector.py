@@ -50,14 +50,14 @@ class _PoseDetector:
                                            min_detection_confidence=self.min_detection_confidence,
                                            min_tracking_confidence=self.min_tracking_confidence)
 
-    def find_position(self, video):
+    def find_position(self, video) -> list:
         """
         Uses MediaPipe to find where the landmarks are
         https://google.github.io/mediapipe/solutions/pose.html
 
         :arg video: The video in which to find the landmarks
 
-        :return: An array with the position as landmarks, and the x,y components in pixels
+        :return: A list with the position as landmarks, and the x,y components in pixels
         """
         self.positions = []
         results = self.pose.process(cv2.cvtColor(video, cv2.COLOR_BGR2RGB))
@@ -68,9 +68,9 @@ class _PoseDetector:
                 self.positions.append([x_axis, y_axis])
         return self.positions
 
-    def find_angle(self, pts):
+    def find_angle(self, pts: list) -> float:
         """
-        :arg pts: The array of the three joints to follow
+        :arg pts: The list of the three joints to follow
 
         :return: The angle (°) created between the three points (angle of the moving joint)
         """
@@ -99,9 +99,9 @@ class _PoseDetector:
 
         return angle
 
-    def find_angle_gravity(self, pts):
+    def find_angle_gravity(self, pts: list) -> float:
         """
-        :arg pts: The array of the three joints to follow
+        :arg pts: The list of the three joints to follow
 
         :return: The angle (°) created between the moving limb and a line parallel to gravity
         """
@@ -124,7 +124,7 @@ class _PoseDetector:
 
         return angle
 
-    def weight_position(self):
+    def weight_position(self) -> int:
         """
         :return: The landmark for the coordinates (pixels) approximately where the weight is located
         or None if the weight is located (like most of the time) at the end of the moving limb
@@ -140,9 +140,9 @@ class _PoseDetector:
         else:
             return None
 
-    def is_upper_body(self):
+    def is_upper_body(self) -> bool:
         """
-        :return: (boolean) True if the muscle is part of the upper body musculature, False if not
+        :return: True if the muscle is part of the upper body musculature, False if not
         """
         UPPER = {"chest": True,
                  "back": True,
@@ -154,11 +154,11 @@ class _PoseDetector:
                  "glutes": False}
         return UPPER[self.muscle.lower()]
 
-    def find_length(self, pts):
+    def find_length(self, pts: list) -> float:
         """
-        :arg pts: The array of the three joints to follow
+        :arg pts: The list of the three joints to follow
 
-        :return: (float) The length (in percentage of the full limb length in pixels) perpendicular to gravity
+        :return: The length (in percentage of the full limb length in pixels) perpendicular to gravity
         """
         if (self.side_seen == "left") or (self.side_seen == "right"):
             weight_pos = _PoseDetector.weight_position(self)
