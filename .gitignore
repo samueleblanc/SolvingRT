@@ -1,2 +1,4 @@
 Video/
-example.*
+test.*
+__pycache__/
+.idea/
