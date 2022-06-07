@@ -25,7 +25,6 @@ SOFTWARE.
 
 import os
 import cv2
-from numpy import add
 from solvingrt import PoseDetector as pd
 from solvingrt import VideoAnalysis as va
 from solvingrt import MathTools as mt
@@ -41,25 +40,25 @@ class Athlete:
         self.weight_used = weight_used_kg
         self.side_seen = side_seen
 
-    def inches_to_meter(self):
+    def inches_to_meter(self) -> None:
         """
         Changes the length that were entered (in inches) to length in meter
         """
         self.height = self.height * 0.0254
         self.moving_limb = self.moving_limb * 0.0254
 
-    def lb_to_kg(self):
+    def lb_to_kg(self) -> None:
         """
         Change the weights that were entered (lb) to weights in kg
         """
         self.weight_used = self.weight_used * 0.453592
         self.body_weight = self.body_weight * 0.453592
 
-    def set_weight_used(self, weight):
+    def set_weight_used(self, weight: float) -> None:
         """
         Can change the weight without changing the class
 
-        :arg weight: (float) New weight used
+        :arg weight: New weight used
         """
         self.weight_used = weight
 
@@ -377,23 +376,12 @@ class Exercise:
             ANALYSIS.resistance_profile(res_pro_torque, res_pro_angles)
 
         if self.save_f is False:
-            print(f"Data calculated for each rep: {rep_data}")
-            print(f"Data calculated for the set: {set_data}")
+            Exercise._print_data_(self, rep_data, set_data)
         elif self.save_f is True:
-            f = open(os.getcwd() + "/Data_for_" + self.name + ".txt", "a")
-            f.write(self.name + "\n\n")
-            f.write("Data calculated for each rep:\n\n")
-            for rep in rep_data:
-                for measures in rep:
-                    f.write(measures + "\n")
-                f.write("\n")
-            f.write("\nData calculated for the set:\n")
-            for measures in set_data:
-                f.write(measures + "\n\n")
-            f.close()
+            Exercise._save_data_(self, rep_data, set_data)
         return
 
-    def change_muscle(self, new_muscle):
+    def change_muscle(self, new_muscle: str) -> None:
         """
         Change which muscle to analyse without changing Exercise
 
@@ -401,54 +389,54 @@ class Exercise:
         """
         self.muscle = new_muscle
 
-    def video_resize(self, width, height):
+    def video_resize(self, width: int, height: int) -> None:
         """
         Change the size of the video
 
-        :arg width: (integer) Width of the video in pixels
-        :arg height: (integer) Height of the video in pixels
+        :arg width: Width of the video in pixels
+        :arg height: Height of the video in pixels
         """
         self.width = int(width)
         self.height = int(height)
 
-    def no_lines(self):
+    def no_lines(self) -> None:
         """
         Don't draw lines over the moving limb
         """
         self.draw = False
 
-    def joint_angle(self):
+    def joint_angle(self) -> None:
         """
         Show the angle of the moving joint
         """
         self.show_joint_angle = True
 
-    def angle_with_gravity(self):
+    def angle_with_gravity(self) -> None:
         """
         Show the angle between the moving limb and a line parallel to gravity
         """
         self.show_angle_with_gravity = True
 
-    def save_in_file(self):
+    def save_in_file(self) -> None:
         """
         Stores the data in a text file instead of printing it on the screen
         """
         self.save_f = True
 
-    def switch_side(self):
+    def switch_side(self) -> None:
         """
         When filming from front or back, the side analyzed is the left one.
         This method switches it to the left side
         """
         self.right_side = True
 
-    def _get_pose_landmarks_(self):
+    def _get_pose_landmarks_(self) -> list:
         """
         Dict of the landmarks depending on the muscle and the side seen by the camera.
         If the side seen is the front or the back, the landmarks to follow are adjusted from those
         https://google.github.io/mediapipe/solutions/pose.html
 
-        :return: An array of the three points to follow
+        :return: A list of the three points to follow
         """
 
         # Front and back are mostly used to draw the lines, not for measurements
@@ -478,17 +466,13 @@ class Exercise:
                                 "back": [12, 24, 26] if self.right_side else [11, 23, 25]}}
         return LANDMARKS[self.muscle.lower()][self.athlete.side_seen.lower()]
 
-    def _get_muscle_info_(self, info_needed):
+    def _get_muscle_info_(self, info_needed: str) -> bool:
         """
-        :arg info_needed: (string)
-
         conc_motion is True means the first part of the movement is in the concentric portion (muscle shortening)
         False means that the muscle starts shortened
 
         decreasing is True means that the joint angle is decreasing during the concentric portion of the movement
         False means the angle increases
-
-        :return: (boolean)
         """
         INFO = {"chest": {"conc_motion": True, "decreasing": False} if "stretch" in self.muscle.lower()
                 else {"conc_motion": False, "decreasing": False},
@@ -503,3 +487,19 @@ class Exercise:
                 "glutes": {"conc_motion": False, "decreasing": True}}
         return INFO[self.muscle.lower()][info_needed.lower()]
 
+        def _save_data_(self, rep_data: list, set_data: list) -> None:
+            f = open(os.getcwd() + "/Data_for_" + self.name + ".txt", "a")
+            f.write(self.name + "\n\n")
+            f.write("Data calculated for each rep:\n\n")
+            for rep in rep_data:
+                for measures in rep:
+                    f.write(measures + "\n")
+                f.write("\n")
+            f.write("\nData calculated for the set:\n")
+            for measures in set_data:
+                f.write(measures + "\n\n")
+            f.close()
+
+        def _print_data_(self, rep_data: list, set_data: list) -> None:
+            print(f"Data calculated for each rep: {rep_data}")
+            print(f"Data calculated for the set: {set_data}")
