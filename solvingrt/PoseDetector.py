@@ -50,7 +50,7 @@ class _PoseDetector:
                                            min_detection_confidence=self.min_detection_confidence,
                                            min_tracking_confidence=self.min_tracking_confidence)
 
-    def find_position(self, video) -> list:
+    def find_position(self, video) -> list[list[int, int]]:
         """
         Uses MediaPipe to find where the landmarks are
         https://google.github.io/mediapipe/solutions/pose.html
@@ -68,7 +68,7 @@ class _PoseDetector:
                 self.positions.append([x_axis, y_axis])
         return self.positions
 
-    def find_angle(self, pts: list) -> float:
+    def find_angle(self, pts: list[int, int, int]) -> float:
         """
         :arg pts: The list of the three joints to follow
 
@@ -99,7 +99,7 @@ class _PoseDetector:
 
         return angle
 
-    def find_angle_gravity(self, pts: list) -> float:
+    def find_angle_gravity(self, pts: list[int, int, int]) -> float:
         """
         :arg pts: The list of the three joints to follow
 
@@ -154,7 +154,7 @@ class _PoseDetector:
                  "glutes": False}
         return UPPER[self.muscle.lower()]
 
-    def find_length(self, pts: list) -> float:
+    def find_length(self, pts: list[int, int, int]) -> float:
         """
         :arg pts: The list of the three joints to follow
 

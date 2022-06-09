@@ -73,7 +73,7 @@ class _VideoAnalysis:
         return self.athlete.moving_limb * self.athlete.weight_used * velocity * eff_length * _VideoAnalysis.G
 
     @staticmethod
-    def speed(angles: list, times: list) -> float:
+    def speed(angles: list[float], times: list[float]) -> float:
         """
         Measures the angular velocity (rad/s) of the moving joint.
 
@@ -113,7 +113,7 @@ class _VideoAnalysis:
         """
         pass
 
-    def resistance_profile(self, torque: list, angles: list) -> None:
+    def resistance_profile(self, torque: list[float], angles: list[float]) -> None:
         """
         The resistance profile is defined as the torque for every angle of the exercise
 

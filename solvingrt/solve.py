@@ -33,7 +33,7 @@ from time import perf_counter
 
 class Athlete:
 
-    def __init__(self, height_meter, body_weight_kg, moving_limb_meter, weight_used_kg, side_seen):
+    def __init__(self, height_meter: float, body_weight_kg: float, moving_limb_meter: float, weight_used_kg: float, side_seen: str):
         self.height = height_meter
         self.body_weight = body_weight_kg
         self.moving_limb = moving_limb_meter
@@ -65,7 +65,7 @@ class Athlete:
 
 class Exercise:
 
-    def __init__(self, exercise_name, muscle, path_to_video, athlete, measures):
+    def __init__(self, exercise_name: str, muscle: str, path_to_video: str, athlete: Athlete, measures: list[str]):
         self.name = exercise_name
         self.muscle = muscle
         self.video = path_to_video

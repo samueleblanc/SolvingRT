@@ -140,7 +140,7 @@ def _pendulum_period(max_angle: float, length: float) -> float:
     return complex_pendulum
 
 
-def _standard_deviation(average: float, sample: list) -> float:
+def _standard_deviation(average: float, sample: list[float]) -> float:
     """
     :arg average: The average of a sample
     :arg sample: The sample on which to calculate the standard deviation
@@ -153,7 +153,7 @@ def _standard_deviation(average: float, sample: list) -> float:
     return std
 
 
-def _average(data: list) -> float:
+def _average(data: list[float]) -> float:
     """
     :arg data: Data on which to calculate an average
 
