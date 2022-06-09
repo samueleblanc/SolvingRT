@@ -50,7 +50,7 @@ class _PoseDetector:
                                            min_detection_confidence=self.min_detection_confidence,
                                            min_tracking_confidence=self.min_tracking_confidence)
 
-    def find_position(self, video) -> list[list[int, int]]:
+    def find_position(self, video: cv2) -> list[list[int, int]]:
         """
         Uses MediaPipe to find where the landmarks are
         https://google.github.io/mediapipe/solutions/pose.html
@@ -124,7 +124,7 @@ class _PoseDetector:
 
         return angle
 
-    def weight_position(self) -> int:
+    def weight_position(self) -> dict:
         """
         :return: The landmark for the coordinates (pixels) approximately where the weight is located
         or None if the weight is located (like most of the time) at the end of the moving limb
