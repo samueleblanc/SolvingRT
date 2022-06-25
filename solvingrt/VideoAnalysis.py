@@ -111,7 +111,7 @@ class _VideoAnalysis:
         Currently, the tempo is calculated in "SolvingRT" file.
         However, only the first and third number are being measured
         """
-        pass
+        raise NotImplementedError
 
     def resistance_profile(self, torque: list[float], angles: list[float]) -> None:
         """
