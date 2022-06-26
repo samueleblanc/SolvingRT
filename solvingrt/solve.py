@@ -487,19 +487,19 @@ class Exercise:
                 "glutes": {"conc_motion": False, "decreasing": True}}
         return INFO[self.muscle.lower()][info_needed.lower()]
 
-        def _save_data_(self, rep_data: list, set_data: list) -> None:
-            f = open(os.getcwd() + "/Data_for_" + self.name + ".txt", "a")
-            f.write(self.name + "\n\n")
-            f.write("Data calculated for each rep:\n\n")
-            for rep in rep_data:
-                for measures in rep:
-                    f.write(measures + "\n")
-                f.write("\n")
-            f.write("\nData calculated for the set:\n")
-            for measures in set_data:
-                f.write(measures + "\n\n")
-            f.close()
+    def _save_data_(self, rep_data: list, set_data: list) -> None:
+        f = open(os.getcwd() + "/Data_for_" + self.name + ".txt", "a")
+        f.write(self.name + "\n\n")
+        f.write("Data calculated for each rep:\n\n")
+        for rep in rep_data:
+            for measures in rep:
+                f.write(measures + "\n")
+            f.write("\n")
+        f.write("\nData calculated for the set:\n")
+        for measures in set_data:
+            f.write(measures + "\n\n")
+        f.close()
 
-        def _print_data_(self, rep_data: list, set_data: list) -> None:
-            print(f"Data calculated for each rep: {rep_data}")
-            print(f"Data calculated for the set: {set_data}")
+    def _print_data_(self, rep_data: list, set_data: list) -> None:
+        print(f"Data calculated for each rep: {rep_data}")
+        print(f"Data calculated for the set: {set_data}")
