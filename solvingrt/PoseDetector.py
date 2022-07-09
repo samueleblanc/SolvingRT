@@ -95,9 +95,7 @@ class _PoseDetector:
             raise ValueError(self.side_seen)
 
         cos_angle = MathTools._law_of_cosine(x1, x2, x3, y1, y2, y3)
-        angle = MathTools._rad_to_deg(math.acos(cos_angle))
-
-        return angle
+        return MathTools._rad_to_deg(math.acos(cos_angle))
 
     def find_angle_gravity(self, pts: list[int, int, int]) -> float:
         """
@@ -120,9 +118,7 @@ class _PoseDetector:
                 x3, y3 = x2, (y2 + 100)
 
         cos_angle = MathTools._law_of_cosine(x1, x2, x3, y1, y2, y3)
-        angle = MathTools._rad_to_deg(math.acos(cos_angle))
-
-        return angle
+        return MathTools._rad_to_deg(math.acos(cos_angle))
 
     def weight_position(self) -> dict:
         """
