@@ -1,4 +1,5 @@
 ![SolvingRT logo](Images/website_title.png)
+
 The primary goal of SolvingRT is to standardize exercise mechanics in a non-intrusive way, 
 by measuring certain aspect of the lift with a video.
 
