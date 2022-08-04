@@ -28,7 +28,6 @@ import cv2
 from solvingrt import PoseDetector as pd
 from solvingrt import VideoAnalysis as va
 from solvingrt import MathTools as mt
-from time import perf_counter
 
 
 class Athlete:
@@ -157,13 +156,15 @@ class Exercise:
             self.height = int(VID.get(cv2.CAP_PROP_FRAME_HEIGHT) / 2)
             self.width = int(VID.get(cv2.CAP_PROP_FRAME_WIDTH) / 2)
 
-        total_frames = int(VID.get(cv2.CAP_PROP_FRAME_COUNT))
+        TOTAL_FRAMES = int(VID.get(cv2.CAP_PROP_FRAME_COUNT))
+        FRAME_RATE = int(VID.get(cv2.CAP_PROP_FPS)) / 1000
+
+        JUMP = 4
 
         while VID.isOpened():
             success, frame = VID.read()
             video = cv2.resize(frame, (self.width, self.height))
             landmarks = self.pose.find_position(video)
-            start_time = perf_counter()
             frame_counts += 1
             if len(landmarks) > 0:
                 x1, y1 = landmarks[POINTS[0]]
@@ -173,38 +174,38 @@ class Exercise:
                 angle = ANALYSIS.angle()
                 effective_length = self.pose.find_length(POINTS)
 
-                times += [perf_counter()]
+                times += [frame_counts * FRAME_RATE]
                 angles += [angle]
                 rep_angles += [angle]
 
                 # Count reps
-                if frame_counts % 4 == 0:
+                if frame_counts % JUMP == 0:
                     if is_shortening:
                         if angle_decreasing:
                             if (angle > last_angle) and (last_angle <= 100):
                                 rep_count += 0.5
                                 is_shortening = False
                             else:
-                                concentric_time += 4
+                                concentric_time += JUMP
                         else:
                             if (angle < last_angle) and (last_angle >= 80):
                                 rep_count += 0.5
                                 is_shortening = False
                             else:
-                                concentric_time += 4
+                                concentric_time += JUMP
                     else:
                         if angle_decreasing:
                             if angle < last_angle and (last_angle >= 80):
                                 rep_count += 0.5
                                 is_shortening = True
                             else:
-                                eccentric_time += 4
+                                eccentric_time += JUMP
                         else:
                             if angle > last_angle and (last_angle <= 100):
                                 rep_count += 0.5
                                 is_shortening = True
                             else:
-                                eccentric_time += 4
+                                eccentric_time += JUMP
                 elif frame_counts % 2 == 0:
                     last_angle = angle
 
@@ -217,14 +218,14 @@ class Exercise:
                 for measure in self.measures:
                     measure = measure.lower()
                     if measure == "torque":
-                        if frame_counts % 4 == 0:
+                        if frame_counts % JUMP == 0:
                             torque += [ANALYSIS.torque(effective_length)]
                         if add_data:
                             rep_data[len(rep_data) - 1] += [f"Torque: {mt._average(torque)} Nm"]
                             torque *= 0
 
                     elif (measure == "power") or (work is True):
-                        if frame_counts % 4 == 0:
+                        if frame_counts % JUMP == 0:
                             velocity = ANALYSIS.speed(angles, times)
                             power = ANALYSIS.power(velocity, effective_length)
                             if conc_motion:
@@ -250,7 +251,7 @@ class Exercise:
                             ecc_power *= 0
 
                     elif (measure == "speed") or (velocity_lost is True):
-                        if frame_counts % 4 == 0:
+                        if frame_counts % JUMP == 0:
                             velocity = ANALYSIS.speed(angles, times)
                             if conc_motion:
                                 if velocity < 0:
@@ -288,8 +289,8 @@ class Exercise:
 
                     elif measure == "tempo":
                         if add_data:
-                            conc_time = concentric_time * (perf_counter() / frame_counts)
-                            ecc_time = eccentric_time * (perf_counter() / frame_counts)
+                            conc_time = concentric_time * FRAME_RATE
+                            ecc_time = eccentric_time * FRAME_RATE
                             rep_data[len(rep_data) - 1] += [f"Concentric time: {round(conc_time, 4)}s",
                                                             f"Eccentric time: {round(ecc_time, 4)}s"]
                             concentric_time *= 0
@@ -303,7 +304,7 @@ class Exercise:
                     elif measure == "resistance profile":
                         # The first rep is excluded for the graph because it is
                         # often paired with a little bit of setting-up for the exercise
-                        if (frame_counts % 4 == 0) and (1 < rep_count < 3):
+                        if (frame_counts % JUMP == 0) and (1 < rep_count < 3):
                             res_pro_angles += [angle]
                             res_pro_torque += [ANALYSIS.torque(effective_length)]
 
@@ -354,7 +355,7 @@ class Exercise:
 
             if cv2.waitKey(1) == 27:  # 27 is escape
                 break
-            elif total_frames - 1 == frame_counts:
+            elif TOTAL_FRAMES - 1 == frame_counts:
                 # Work around an OpenCV problem
                 # Error: (-215:Assertion failed) !ssize.empty() in function 'cv::resize'
                 break
@@ -363,7 +364,7 @@ class Exercise:
         cv2.destroyAllWindows()
 
         if time_under_tension:
-            tust_in_sec = tust * ((perf_counter() - start_time) / frame_counts)
+            tust_in_sec = tust * FRAME_RATE
             set_data += [f"Time under significant tension: {tust_in_sec} s"]
         if min_max_angles:
             set_data += [f"Min angle: {round(min(angles), 4)}", f"Max angle: {round(max(angles), 4)}"]
@@ -487,19 +488,19 @@ class Exercise:
                 "glutes": {"conc_motion": False, "decreasing": True}}
         return INFO[self.muscle.lower()][info_needed.lower()]
 
-        def _save_data_(self, rep_data: list, set_data: list) -> None:
-            f = open(os.getcwd() + "/Data_for_" + self.name + ".txt", "a")
-            f.write(self.name + "\n\n")
-            f.write("Data calculated for each rep:\n\n")
-            for rep in rep_data:
-                for measures in rep:
-                    f.write(measures + "\n")
-                f.write("\n")
-            f.write("\nData calculated for the set:\n")
-            for measures in set_data:
-                f.write(measures + "\n\n")
-            f.close()
+    def _save_data_(self, rep_data: list, set_data: list) -> None:
+        f = open(os.getcwd() + "/Data_for_" + self.name + ".txt", "a")
+        f.write(self.name + "\n\n")
+        f.write("Data calculated for each rep:\n\n")
+        for rep in rep_data:
+            for measures in rep:
+                f.write(measures + "\n")
+            f.write("\n")
+        f.write("\nData calculated for the set:\n")
+        for measures in set_data:
+            f.write(measures + "\n\n")
+        f.close()
 
-        def _print_data_(self, rep_data: list, set_data: list) -> None:
-            print(f"Data calculated for each rep: {rep_data}")
-            print(f"Data calculated for the set: {set_data}")
+    def _print_data_(self, rep_data: list, set_data: list) -> None:
+        print(f"Data calculated for each rep: {rep_data}")
+        print(f"Data calculated for the set: {set_data}")
