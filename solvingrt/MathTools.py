@@ -114,8 +114,7 @@ def _law_of_cosine(x1: int, x2: int, x3: int, y1: int, y2: int, y3: int) -> floa
     if deno == 0:  # Shouldn't happen, but prevents a potential bug
         deno = 0.001
 
-    angle_cos = ((side_c ** 2) + (side_a ** 2) - (side_b ** 2)) / deno
-    return angle_cos
+    return ((side_c ** 2) + (side_a ** 2) - (side_b ** 2)) / deno
 
 
 def _pythagorean_theorem(x1: int, x2: int, y1: int, y2: int, z1=0, z2=0) -> float:
@@ -136,8 +135,7 @@ def _pendulum_period(max_angle: float, length: float) -> float:
     """
     simple_pendulum = ((2 * PI) * (length / G) ** (1/2))
     # Taylor series to approximate
-    complex_pendulum = simple_pendulum * (1 + ((max_angle ** 2) / 16) + ((11 / 3074) * (max_angle ** 4)))
-    return complex_pendulum
+    return simple_pendulum * (1 + ((max_angle ** 2) / 16) + ((11 / 3074) * (max_angle ** 4)))
 
 
 def _standard_deviation(average: float, sample: list[float]) -> float:
@@ -149,8 +147,7 @@ def _standard_deviation(average: float, sample: list[float]) -> float:
     """
     n = 0.0
     n += [((i - average) ** 2) for i in sample]
-    std = (n / len(sample)) ** (1/2)
-    return std
+    return (n / len(sample)) ** (1/2)
 
 
 def _average(data: list[float]) -> float:

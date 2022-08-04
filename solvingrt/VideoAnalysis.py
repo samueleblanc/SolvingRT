@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import matplotlib.pyplot as plt
 from solvingrt import MathTools as mt
 import os
 
@@ -111,7 +112,7 @@ class _VideoAnalysis:
         Currently, the tempo is calculated in "SolvingRT" file.
         However, only the first and third number are being measured
         """
-        pass
+        raise NotImplementedError
 
     def resistance_profile(self, torque: list[float], angles: list[float]) -> None:
         """
@@ -122,8 +123,6 @@ class _VideoAnalysis:
 
         Saves the graph as a png file
         """
-        import matplotlib.pyplot as plt
-        
         plt.plot(angles, torque, "b")
         plt.xlabel("Angle (°)")
         plt.ylabel("Torque (Nm)")
