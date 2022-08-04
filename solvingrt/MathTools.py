@@ -156,10 +156,7 @@ def _average(data: list[float]) -> float:
 
     :return: The average of the data provided
     """
-    summ = 0
-    for i in data:
-        summ += i
     if len(data) == 0:
         raise Exception("Division by zero. Often caused by video not restricted to the lift "
                         "(eg. the lifter preparing is included).")
-    return round((abs(summ) / len(data)), 4)
+    return round((abs(sum(data)) / len(data)), 4)

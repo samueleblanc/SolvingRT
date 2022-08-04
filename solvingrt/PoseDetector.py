@@ -62,7 +62,7 @@ class _PoseDetector:
         self.positions = []
         results = self.pose.process(cv2.cvtColor(video, cv2.COLOR_BGR2RGB))
         if results.pose_landmarks:
-            for pt, landmarks in enumerate(results.pose_landmarks.landmark):
+            for landmarks in results.pose_landmarks.landmark:
                 height, width, _ = video.shape
                 x_axis, y_axis = int(landmarks.x * width), int(landmarks.y * height)
                 self.positions.append([x_axis, y_axis])

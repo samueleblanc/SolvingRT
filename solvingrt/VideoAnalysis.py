@@ -100,10 +100,7 @@ class _VideoAnalysis:
         :return: an integer which means if yes (1) or no (0) the length perpendicular is above 5%
         The number are then added (file SolvingRT) and a time is calculated with the FPS of the video.
         """
-        if eff_length < 0.05:
-            return 0
-        else:
-            return 1
+        return 0 if eff_length < 0.05 else 1
 
     # First number is the time spent in the eccentric portion, second is the time while the muscle is
     # in a lengthened position, third concentric, fourth shortened
