@@ -120,10 +120,6 @@ class _VideoAnalysis:
 
         Saves the graph as a png file
         """
-<<<<<<< HEAD
-=======
-        import matplotlib.pyplot as plt
->>>>>>> bcdd52aff63e96f1fd90e64514e00492c3abc858
         plt.plot(angles, torque, "b")
         plt.xlabel("Angle (°)")
         plt.ylabel("Torque (Nm)")
