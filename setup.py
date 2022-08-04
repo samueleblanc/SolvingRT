@@ -46,9 +46,6 @@ setup(name="SolvingRT",
           "Programming Language :: Python :: 3",
           "License :: OSI Approved :: MIT License"
       ],
-      install_requires=["numpy", "opencv-python", "mediapipe"],
-      extra_requires={
-          "resistance-profile": ["matplotlib"]
-      },
+      install_requires=["numpy", "opencv-python", "mediapipe", "matplotlib"],
       python_requires=">=3.8"
       )

@@ -2,3 +2,4 @@ setuptools>=61.2.0
 mediapipe>=0.8.9.1
 numpy>=1.0.0
 opencv>=4.5.0
+matplotlib>=3.0.0

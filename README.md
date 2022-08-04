@@ -5,7 +5,7 @@ by measuring certain aspect of the lift with a video.
 <a href="https://samueleblanc.com/solvingrt/documentation.html" target="_blank">Full documentation</a>
 ## Requirements
 For SolvingRT to work, you need <a href="https://google.github.io/mediapipe/getting_started/python.html" target="_blank">MediaPipe</a>, 
-<a href="https://opencv.org/releases/" target="_blank">OpenCV</a> and <a href="https://matplotlib.org/stable/users/getting_started/" target="_blank">Matplotlib</a> (if you want to draw the graph of the resistance profile).
+<a href="https://opencv.org/releases/" target="_blank">OpenCV</a> and <a href="https://matplotlib.org/stable/users/getting_started/" target="_blank">Matplotlib</a>.
 ## Installation
 ```
 pip install git+https://github.com/samueleblanc/SolvingRT.git
